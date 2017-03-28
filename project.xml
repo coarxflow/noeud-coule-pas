@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+	
+	<meta title="Displaying a Bitmap" package="org.openfl.samples.displayingabitmap" version="1.0.0" company="OpenFL" />
+	<app main="Main" path="Export" file="DisplayingABitmap" />
+	
+	<source path="Source" />
+	
+	<haxelib name="openfl" />
+	
+	<assets path="Assets" rename="assets" />
+	<assets path="Assets/audio" rename="audio" type="audio" />
+	
+	<haxelib name="crashdumper"/>
+	
+	<haxelib name="hxcpp" />
+	
+	<haxedef name="HXCPP_DEBUG_LINK" />
+	<haxedef name="HXCPP_CHECK_POINTER"/>
+<haxedef name="HXCPP_STACK_LINE" />
+<haxedef name="HXCPP_STACK_TRACE"/>
+	
+</project>

@@ -1,0 +1,12 @@
+package alive_scripts;
+
+import openfl.geom.Point;
+import openfl.display.Bitmap;
+
+class AliveScriptBase
+{
+	public function nextMove(sprite: Bitmap): Point
+	{
+		return new Point(0,0);
+	}
+}

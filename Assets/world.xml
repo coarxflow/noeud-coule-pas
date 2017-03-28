@@ -1,0 +1,29 @@
+<world>
+	<grid rows="3" cols="4">
+		<row>
+			<scene src="supermarket" act="consume" snd1="punk-1" snd2="punk-color" snd3="noise-1"/>
+			<scene src="crossing" act="no" snd1="punk-1" snd2="punk-color" snd3="noise-1"/>
+			<scene src="img561" act="cross" gravity="player" snd1="punk-1" snd2="punk-color" snd3="noise-1"/>
+			<scene src="hospital" act="consume" snd1="punk-1" snd2="punk-color" snd3="noise-1"/>
+		</row>
+		<row>
+			<scene src="eklezio kermess ds" act="cross" snd1="punk-1" snd2="punk-color" snd3="noise-1">
+				<anim left="250" top="100" right="350" bottom="160" script="rotating-clock"/>
+			</scene>
+			<scene src="dialog" act="cross" snd1="punk-1" snd2="punk-color" snd3="noise-1"/>
+			<scene src="dormitory" act="cross" snd1="punk-1" snd2="punk-color" snd3="noise-1"/>
+			<scene src="volcano" act="cross" gravity="all" snd1="punk-1" snd2="punk-color" snd3="noise-1"/>
+		</row>
+		<row>
+			<scene src="bar" act="consume" snd1="punk-1" snd2="punk-color" snd3="noise-1">
+				<point type="consumable" x="597" y="249" />
+			</scene>
+			<scene src="street-6" act="no" snd1="punk-1" snd2="punk-color" snd3="noise-1"/>
+			<scene src="yard" act="no" snd1="punk-1" snd2="punk-color" snd3="noise-1"/>
+			<scene src="path" act="cross" snd1="punk-1" snd2="punk-color" snd3="noise-1"/>
+		</row>
+	</grid>
+	<inside>
+		<scene src="start room 2" act="no" parent="dormitory" left="640" top="50" right="790" bottom="200" snd1="punk-1" snd2="punk-color" snd3="noise-1"/>
+	</inside>
+</world>
