@@ -61,7 +61,7 @@ class ExtendedAssetManifest {
 		return FileSystem.exists(chkSep(manifest.name+path));
 	}
 
-	public function appendImage(path: String, bmp: openfl.display.BitmapData, force_rewrite: Bool = true)
+	public function appendImage(path: String, bmp: openfl.display.BitmapData, force_rewrite: Bool = true) : Bool
 	{
 
 		var exists = appendAsset(path, AssetType.IMAGE);
@@ -74,6 +74,8 @@ class ExtendedAssetManifest {
 			fo.writeString(b.toString());
 			fo.close();
 		}
+
+		return exists;
 	}
 
 	public function appendText(path: String, txt:String, force_rewrite: Bool = true) : Bool

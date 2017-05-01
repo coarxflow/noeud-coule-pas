@@ -9,6 +9,7 @@ class KeyboardInputs {
 	public static var arrowKeyRight:Bool = false;
 
 	public static var spaceKey:Bool = false;
+	public static var escKey:Bool = false;
 
 	//developer keys
 	public static var developerInput:Bool = true;
@@ -17,20 +18,23 @@ class KeyboardInputs {
 	public static var mKey:Bool = false;
 	public static var kKey:Bool = false;
 	public static var nKey:Bool = false;
+	public static var lKey:Bool = false;
 	public static var dotKey:Bool = false;
 	public static var rshiftKey:Bool = false;
 	public static var enterKey:Bool = false;
+	public static var ctrlKey:Bool = false;
+	public static var altKey:Bool = false;
 
 	public static var numberBuffer:String= "";
 
 	public static function keyDown(event:KeyboardEvent):Void {
-		if (event.keyCode == 38) { // Up
+		if (event.keyCode == 38 || event.keyCode == 87) { // Up
 			arrowKeyUp = true;
-		}else if (event.keyCode == 40) { // Down
+		}else if (event.keyCode == 40 || event.keyCode == 83) { // Down
 			arrowKeyDown = true;
-		}else if (event.keyCode == 39) { // Left?
+		}else if (event.keyCode == 39 || event.keyCode == 68) { // Left?
 			arrowKeyRight = true;
-		}else if (event.keyCode == 37) { // Right?
+		}else if (event.keyCode == 37 || event.keyCode == 65) { // Right?
 			arrowKeyLeft = true;
 		}
 		else if (event.keyCode == 32 && !spaceKey) { // Space
@@ -42,9 +46,18 @@ class KeyboardInputs {
 				PlayerControl.triggerConsume();
 				case Color:
 				PlayerControl.triggerPaint();
+				case Consult:
+				PlayerControl.triggerGuide();
+				case Continue:
+				PlayerControl.mainScene.nextScreen();
 				case Closed:
 			}
 			
+		}
+		else if(event.keyCode == 27 && !escKey)
+		{
+			PlayerControl.mainScene.runPaused = !PlayerControl.mainScene.runPaused;
+			escKey = true;
 		}
 		//Sys.println(event.keyCode );
 		if(developerInput)
@@ -65,10 +78,15 @@ class KeyboardInputs {
 			{
 				nKey = true;
 			}
+			if(event.keyCode == 76 && !lKey) //l
+			{
+				lKey = true;
+			}
 			if(event.keyCode == 190 && !dotKey) //.
 			{
 				dotKey = true;
-				PlayerControl.mainScene.scene.save();
+				PlayerControl.mainScene.regenScene();
+				PlayerControl.mainScene.scene.save(true);
 			}
 			if(event.keyCode == 16 && !rshiftKey) //(right) shift, cpas lock = 20
 			{
@@ -78,6 +96,14 @@ class KeyboardInputs {
 			if(event.keyCode == 13 && !enterKey) //enter
 			{
 				enterKey = true;
+			}
+			if(event.keyCode == 17 && !ctrlKey) //control
+			{
+				ctrlKey = true;
+			}
+			if(event.keyCode == 18 && !altKey) //alt
+			{
+				altKey = true;
 			}
 
 			//number input
@@ -126,46 +152,65 @@ class KeyboardInputs {
 	}
 	
 	public static function keyUp(event:KeyboardEvent):Void {
-		if (event.keyCode == 38) { // Up
+		if (event.keyCode == 38 || event.keyCode == 87) { // Up
 			arrowKeyUp = false;
-		}else if (event.keyCode == 40) { // Down
+		}else if (event.keyCode == 40 || event.keyCode == 83) { // Down
 			arrowKeyDown = false;
-		}else if (event.keyCode == 39) { // Left?
+		}else if (event.keyCode == 39 || event.keyCode == 68) { // Left?
 			arrowKeyRight = false;
-		}else if (event.keyCode == 37) { // Right?
+		}else if (event.keyCode == 37 || event.keyCode == 65) { // Right?
 			arrowKeyLeft = false;
 		}
 		else if (event.keyCode == 32) { // Space
 			spaceKey = false;
 		}
+		else if(event.keyCode == 27)
+		{
+			escKey = false;
+		}
 
-		if(event.keyCode == 80) //p
+		if(developerInput)
 		{
-			pKey = false;
-		}
-		if(event.keyCode == 77) //m
-		{
-			mKey = false;
-		}
-		if(event.keyCode == 75) //k
-		{
-			kKey = false;
-		}
-		if(event.keyCode == 78) //n
-		{
-			nKey = false;
-		}
-		if(event.keyCode == 190) //.
-		{
-			dotKey = false;
-		}
-		if(event.keyCode == 16) //shift
-		{
-			rshiftKey = false;
-		}
-		if(event.keyCode == 13) //enter
-		{
-			enterKey = false;
+			if(event.keyCode == 80) //p
+			{
+				pKey = false;
+			}
+			if(event.keyCode == 77) //m
+			{
+				mKey = false;
+			}
+			if(event.keyCode == 75) //k
+			{
+				kKey = false;
+			}
+			if(event.keyCode == 78) //n
+			{
+				nKey = false;
+			}
+			if(event.keyCode == 76) //l
+			{
+				lKey = false;
+			}
+			if(event.keyCode == 190) //.
+			{
+				dotKey = false;
+			}
+			if(event.keyCode == 16) //shift
+			{
+				rshiftKey = false;
+			}
+			if(event.keyCode == 13) //enter
+			{
+				enterKey = false;
+			}
+			if(event.keyCode == 17) //control
+			{
+				ctrlKey = false;
+			}
+			if(event.keyCode == 18) //alt
+			{
+				altKey = false;
+			}
 		}
 	}
 }

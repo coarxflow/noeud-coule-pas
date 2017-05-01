@@ -8,7 +8,7 @@ class RandomPaperSample {
 
 	public static function getPixel(x: Float, y: Float) : Int
 	{
-		return sample.getPixel(Math.floor(Math.random()*sample.width),Math.floor(Math.random()*sample.height));
+		return sample.getPixel32(Math.floor(Math.random()*sample.width),Math.floor(Math.random()*sample.height));
 	}
 
 	public static function getRegion(w: Int, h: Int) : BitmapData
@@ -17,7 +17,7 @@ class RandomPaperSample {
 		for (x in 0...w)
 			for (y in 0...h)
 			{
-				bmp.setPixel(x,y,sample.getPixel(Math.floor(Math.random()*sample.width),Math.floor(Math.random()*sample.height)));
+				bmp.setPixel32(x,y,sample.getPixel32(Math.floor(Math.random()*sample.width),Math.floor(Math.random()*sample.height)));
 			}
 		return bmp;
 	}

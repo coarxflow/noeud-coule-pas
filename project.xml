@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project>
 	
-	<meta title="Displaying a Bitmap" package="org.openfl.samples.displayingabitmap" version="1.0.0" company="OpenFL" />
-	<app main="Main" path="Export" file="DisplayingABitmap" />
+	<meta title="Noeud Coule Pas" package="com.ltw.noeudcoulepas" version="1.0.0" company="LTW" />
+	<app main="Main" path="Export" file="NoeudCoulePas" />
 	
 	<source path="Source" />
 	
@@ -10,6 +10,7 @@
 	
 	<assets path="Assets" rename="assets" />
 	<assets path="Assets/audio" rename="audio" type="audio" />
+	<assets path="Assets/soundeffects" rename="soundeffects" type="audio" />
 	
 	<haxelib name="crashdumper"/>
 	

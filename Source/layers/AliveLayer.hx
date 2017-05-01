@@ -1,3 +1,5 @@
+package layers;
+
 import openfl.display.Shape;
 import openfl.display.Sprite;
 import openfl.display.BitmapData;
@@ -24,16 +26,20 @@ import alive_scripts.AliveScriptBase;
 import alive_scripts.Still;
 import alive_scripts.RandomSpeed;
 import alive_scripts.PlayerAttraction;
+import alive_scripts.Runner;
 
 typedef UnitBitmap = {
 	    var im : Bitmap;
 	    var id : Int;
 	    @:optional var sc : AliveScriptBase;
+	    @:optional var ignore_physics : Bool;
 	}
 
 class AliveLayer extends Sprite
 {
-	public var units : Array<UnitBitmap>;
+	public static inline var MASK_DOWNSAMPLING_FACTOR = 1;
+
+	public var units : Array<UnitBitmap> = new Array<UnitBitmap>();
 	
 	private var boxes: Shape;
 	private var labels: Array<TextField>;
@@ -50,13 +56,14 @@ class AliveLayer extends Sprite
 		}*/
 	}
 
+	public static var CLEAR_REGION_EXTEND : Int = 10;
+
 	public function extractRegions(mask: LogicMask, image: Bitmap, scene_name: String)
 	{
 		var r: LogicMask.LogicRegion;
 		var u: UnitBitmap;
 		var rect: Rectangle;
 		var bmp: BitmapData;
-		units = new Array<UnitBitmap>();
 		for(i in 0...mask.regions.length)
 		{
 			r = mask.regions[i];
@@ -64,19 +71,22 @@ class AliveLayer extends Sprite
 			rect = new Rectangle(r.left, r.top, r.right-r.left, r.bottom-r.top);
 			u.im.bitmapData.copyPixels(image.bitmapData, rect, new Point(0,0));
 
-			for(x in 0...Math.ceil(r.right-r.left))
-				for(y in 0...Math.ceil(r.bottom-r.top))
-				{
-					if(mask.getXY(Math.floor(r.left)+x,Math.floor(r.top)+y)==0)
-						u.im.bitmapData.setPixel32(x,y,0);
-				}
+			// for(x in 0...Math.ceil(r.right-r.left))
+			// 	for(y in 0...Math.ceil(r.bottom-r.top))
+			// 	{
+			// 		if(mask.getXY(Math.floor(r.left)+x,Math.floor(r.top)+y)==0)
+			// 			u.im.bitmapData.setPixel32(x,y,0);
+			// 	}
 
+			u.im.bitmapData = SceneProcessor.MergeFilteredBMP(SceneProcessor.MergeFilteredBMP(SceneProcessor.filterColorBMP(u.im.bitmapData,SceneProcessor.pinkfilter_relaxed), SceneProcessor.filterColorBMP(u.im.bitmapData,SceneProcessor.purplefilter_relaxed)), SceneProcessor.filterColorBMP(u.im.bitmapData,SceneProcessor.purple2filter_relaxed));
+			
 			u.im.x = r.left;
 			u.im.y = r.top;
 
 			u.sc = new Still();
 
 			//erase in original image
+			r.left-=CLEAR_REGION_EXTEND;r.top-=CLEAR_REGION_EXTEND;r.right+=CLEAR_REGION_EXTEND;r.bottom+=CLEAR_REGION_EXTEND;
 			bmp = layers.RandomPaperSample.getRegion(r.right-r.left, r.bottom-r.top);
 			//bmp = new BitmapData(r.right-r.left, r.bottom-r.top);
 			//bmp.noise(777, 240, 255);
@@ -103,6 +113,17 @@ class AliveLayer extends Sprite
 			addChild(unit.im);
 	}
 
+	public function consumeUnit(unit_id: Int)
+	{
+		var ub : UnitBitmap = null;
+		for (u in units)
+			if(u.id == unit_id)
+				ub=u;
+
+		removeChild(ub.im);
+		units.remove(ub);
+	}
+
 	public static inline var INFO_COLOR: Int = 0xCC2222;
 
 	public function drawInfo()
@@ -118,8 +139,6 @@ class AliveLayer extends Sprite
 		{
 			boxes.graphics.lineStyle(1, INFO_COLOR, 1);
 			boxes.graphics.drawRect(units[i].im.x, units[i].im.y, units[i].im.width, units[i].im.height);
-
-
 		
 			label = new TextField();
 			addChild(label);
@@ -174,10 +193,16 @@ class AliveLayer extends Sprite
 			}
 			else
 			{
-				var pt: openfl.geom.Point = units[u].sc.nextMove(units[u].im);
+				var pt: openfl.geom.Point = units[u].sc.nextMove(units[u]);
 				if (sceneGravity)
 					pt.y += PlayerControl.GRAVITY_ACCELERATION;
-				moveSprite(units[u].im, Math.round(pt.x), Math.round(pt.y), targetCoordinateSpace);
+				if(units[u].ignore_physics)
+				{
+					units[u].im.x += Math.round(pt.x);
+					units[u].im.y += Math.round(pt.y);
+				}
+				else
+					moveSprite(units[u].im, units[u].id, Math.round(pt.x), Math.round(pt.y), targetCoordinateSpace);
 				PhysicsLayer.registerMovingElement(targetCoordinateSpace, units[u].im);
 			}
 		}
@@ -200,7 +225,9 @@ class AliveLayer extends Sprite
 			var r1: Rectangle = unit1.im.getBounds(Main.targetCoordinateSpace);
 			var r2: Rectangle = unit2.im.getBounds(Main.targetCoordinateSpace);
 
-			var ri: Rectangle = r1.intersection(r2);
+			var ri: Rectangle = r1.union(r2);
+
+			Sys.println(r1+" "+r2+" "+ri);
 
 			if(ri.isEmpty())
 				return;
@@ -212,26 +239,37 @@ class AliveLayer extends Sprite
 
 			var pt: Point = new Point(0,0);
 
+			var col1: ARGB;
 			var col2: ARGB;
+
+			var bmp: BitmapData = new BitmapData(Math.round(ri.width), Math.round(ri.height),true,0x0);
 
 			for (x in xb ... xe) {
 				for (y in yb ...ye) {
 					pt.x=x; pt.y=y;
 					pt=unit2.im.globalToLocal(pt);
 					col2 = new ARGB(unit2.im.bitmapData.getPixel32(Math.round(pt.x), Math.round(pt.y)));
-					if (col2.a > 0)
-					{
-						pt.x=x; pt.y=y;
-						pt=unit1.im.globalToLocal(pt);
-						unit1.im.bitmapData.setPixel32(Math.round(pt.x), Math.round(pt.y), col2);
-					}
+					if(col2.a > 0)
+						bmp.setPixel32(Math.round(x-xb), Math.round(y-yb), col2);
+					
+					pt.x=x; pt.y=y;
+					pt=unit1.im.globalToLocal(pt);
+					col1 = new ARGB(unit1.im.bitmapData.getPixel32(Math.round(pt.x), Math.round(pt.y)));
+					if(col1.a > 0)
+						bmp.setPixel32(Math.round(x-xb), Math.round(y-yb), col1);
+					
 				}
 			}
+
+			unit1.im.bitmapData = bmp;
 		}
 	}
 
+	////////// movement helpers
+
 	static inline var MOVEMENT_APPLY_STEP: Float = 2;
-	public static function moveSprite(sprite: Bitmap, dx: Float, dy: Float, targetCoordinateSpace:DisplayObject)
+
+	public static function moveSprite(sprite: Bitmap, aliveUnitId: Int, dx: Float, dy: Float, targetCoordinateSpace:DisplayObject) : CollisionResult
 	{
 		//rotateSprite(sprite, dx, dy);
 
@@ -242,6 +280,7 @@ class AliveLayer extends Sprite
 		var sy: Float = 0;
 
 		var flag: Bool = true;
+		var cr:CollisionResult = null;
 		//test that no wall were collided smoothly
 		while((ax <= Math.abs(dx) || ay <= Math.abs(dy)) && flag)
 		{
@@ -272,7 +311,7 @@ class AliveLayer extends Sprite
 			}
 			sprite.x += sx;
 			sprite.y += sy;
-			var cr:CollisionResult = PhysicsLayer.checkForColision(targetCoordinateSpace, sprite);
+			cr = PhysicsLayer.checkForColision(targetCoordinateSpace, sprite, aliveUnitId);
 
 			if(cr.left_in != 0)
 			{
@@ -299,6 +338,8 @@ class AliveLayer extends Sprite
 				flag = false;
 
 		}
+
+		return cr;
 	}
 
 	private static function rotateSprite(sprite: Bitmap, dx: Int, dy: Int)
@@ -306,6 +347,23 @@ class AliveLayer extends Sprite
 		//Sys.println(sprite.rotation+" "+Math.atan2(dy,dx));
 		//sprite.
 	}
+
+	public static function moveTowards(sprite: Bitmap, target: Point, velocity: Float): Point
+	{
+		var dr = new Point(target.x-sprite.x-sprite.width/2, target.x-sprite.y-sprite.height/2);
+		var norm = Math.sqrt(Math.pow(dr.x,2)+Math.pow(dr.y,2));
+		dr.x/=norm/velocity;
+		dr.y/=norm/velocity;
+		return dr;
+	}
+
+	public static function moveTowards2(sprite: Bitmap, target: Bitmap, velocity: Float): Point
+	{
+		var tgt = new Point(target.x+target.width/2, target.y+target.height/2);
+		return moveTowards(sprite, tgt, velocity);
+	}
+
+	////// units management
 
 	public function transferUnitTo(layer: AliveLayer, unit_id:Int)
 	{
@@ -331,7 +389,7 @@ class AliveLayer extends Sprite
 				ub=u;
 
 		var cp: Point = new Point(ub.im.x + ub.im.width/2, ub.im.y + ub.im.height/2);
-		var r2min : Float = Math.pow(50,2); //should be at least 50px close
+		var r2min : Float = Math.pow(150,2); //should be at least 50px close
 		var r2: Float = 0;
 		var ub2 : UnitBitmap = null;
 		for (u in units)
@@ -370,11 +428,56 @@ class AliveLayer extends Sprite
 			ub.sc = new RandomSpeed();
 			case 2:
 			ub.sc = new PlayerAttraction(PlayerControl.playerSprite);
+			case 3:
+			ub.sc = new alive_scripts.DancingCircle(false);
+			case 9:
+			ub.sc = new Runner();
 			case 0:
 			default:
 			ub.sc = new Still();
 		}
 	}
+
+	public function findUnitAt(pt: Point, except_id : Int = -1) : UnitBitmap
+	{
+		//pt = PlayerControl.playerSprite.localToGlobal(pt);
+		var r2min : Float = 10000000;
+		var r2: Float = 0;
+		var ub2 : UnitBitmap = null;
+		var bnd: Rectangle;
+		for (u in units)
+			if(u.id != except_id)
+			{
+				bnd = u.im.getBounds(Main.targetCoordinateSpace);
+				/*if(pt.x > u.im.x && pt.x < u.im.x+u.im.width && pt.y > u.im.y && pt.y < u.im.y+u.im.height)
+				{
+					r2 = Math.pow(u.im.x + u.im.width/2 - pt.x, 2) + Math.pow(u.im.y + u.im.height/2 - pt.y, 2);
+					if(r2 < r2min)
+					{
+						r2min = r2;
+						ub2 = u;
+					}
+				}*/
+				if(bnd.containsPoint(pt))
+				{
+					r2 = Math.pow(bnd.x + bnd.width/2 - pt.x, 2) + Math.pow(bnd.y + bnd.height/2 - pt.y, 2);
+					if(r2 < r2min)
+					{
+						r2min = r2;
+						ub2 = u;
+					}
+				}
+			}
+
+		if(ub2 != null)
+			Sys.println("found "+ub2.id+" at "+pt);
+		else
+			Sys.println("found no unit at "+pt);
+
+		return ub2;
+	}
+
+	
 
 	///// IO
 
@@ -387,6 +490,8 @@ class AliveLayer extends Sprite
 
 		for(unit in units)
 		{
+			if(unit.id == PlayerControl.aliveUnitId) //when regenerating, avoid saving player as well
+				continue;
 			var id = Xml.createElement("unit");
 			id.set("id",""+unit.id);
 			id.set("x", ""+unit.im.x);

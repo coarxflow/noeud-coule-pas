@@ -24,7 +24,6 @@ class InsertDecorRegion extends AnimatedRegion {
 	}
 
 	public override function insertStep() {
-		Sys.println("insert start");
 		var xb: Int = Math.floor(region.x);
 		var yb: Int = Math.floor(region.y);
 		var xe: Int = Math.ceil(region.x+region.width);
@@ -37,10 +36,6 @@ class InsertDecorRegion extends AnimatedRegion {
 		pt=targetSprite.globalToLocal(pt);
 		targetSprite.bitmapData.copyPixels(insertData, new Rectangle(0,0,insertData.width,insertData.height), pt);*/
 		//insert physics
-		Sys.println("bitmap size "+targetSprite.bitmapData.width+" "+targetSprite.bitmapData.height);
-		Sys.println(insertPhysic+" "+insertPhysic.width+" "+insertPhysic.height);
-		Sys.println(targetPhysicLayer+" "+targetPhysicLayer.width+" "+targetPhysicLayer.height);
-		Sys.println(insertData+" "+insertData.width+" "+insertData.height);
 		for (x in xb ... xe) {
 			for (y in yb ...ye) {
 				//Sys.print((x-xb)+" "+(y-yb)+" ");
@@ -60,6 +55,5 @@ class InsertDecorRegion extends AnimatedRegion {
 
 		complete = true;
 
-		Sys.println("insert end");
 	}
 }

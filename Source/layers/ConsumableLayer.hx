@@ -22,8 +22,7 @@ import haxe.xml.Printer;
 import layers.PhysicsLayer;
 import alive_scripts.AliveScriptBase;
 
-
-typedef UnitBitmap = {
+typedef UnitBitmap2 = {
 	    var im : Bitmap;
 	    var id : Int;
 	    var persistent: Bool;
@@ -31,10 +30,15 @@ typedef UnitBitmap = {
 
 class ConsumableLayer extends Sprite
 {
-	public var units : Array<UnitBitmap> = new Array<UnitBitmap>();
+
+	public static inline var MASK_DOWNSAMPLING_FACTOR = 1;
+
+	public var units : Array<UnitBitmap2> = new Array<UnitBitmap2>();
 	
 	private var boxes: Shape;
 	private var labels: Array<TextField>;
+
+	private var max_id: Int = 0;
 
 	public function new () {
 		super();
@@ -43,14 +47,14 @@ class ConsumableLayer extends Sprite
 	public function extractRegions(mask: LogicMask, image: Bitmap)
 	{
 		var r: LogicMask.LogicRegion;
-		var u: UnitBitmap;
+		var u: UnitBitmap2=null;
 		var rect: Rectangle;
 		var bmp: BitmapData;
 		//units = new Array<UnitBitmap>();
 		for(i in 0...mask.regions.length)
 		{
 			r = mask.regions[i];
-			u = {im : new Bitmap(new BitmapData(r.right-r.left, r.bottom-r.top)), id: r.id, persistent: false};
+			u = {im : new Bitmap(new BitmapData(r.right-r.left, r.bottom-r.top)), id: max_id+r.id, persistent: false};
 			rect = new Rectangle(r.left, r.top, r.right-r.left, r.bottom-r.top);
 			u.im.bitmapData.copyPixels(image.bitmapData, rect, new Point(0,0));
 
@@ -72,6 +76,9 @@ class ConsumableLayer extends Sprite
 
 			units.push(u);
 		}
+
+		if(u != null)
+			max_id = u.id;
 	}
 
 	public function offsetUnits(dx: Float, dy: Float)
@@ -89,7 +96,7 @@ class ConsumableLayer extends Sprite
 			addChild(unit.im);
 	}
 
-	public function consumeUnit(u: UnitBitmap)
+	public function consumeUnit(u: UnitBitmap2)
 	{
 		if(!u.persistent)
 		{
@@ -139,11 +146,11 @@ class ConsumableLayer extends Sprite
 		}
 	}
 
-	public function findClosest(x: Float, y: Float, r: Float) : UnitBitmap
+	public function findClosest(x: Float, y: Float, r: Float) : UnitBitmap2
 	{
 		r = Math.pow(r,2);
 
-		var ci: UnitBitmap =  null;
+		var ci: UnitBitmap2 =  null;
 		var cr2: Float = 1000000;
 		for(unit in units)
 		{
@@ -160,12 +167,109 @@ class ConsumableLayer extends Sprite
 		return ci;
 	}
 
-	public function addInvisible(x: Float, y: Float)
+	public function findNextId(crt_object: UnitBitmap2) : UnitBitmap2
 	{
-		var unit: ConsumableLayer.UnitBitmap = {im: new Bitmap(new BitmapData(2,2,0x0)), id: -9, persistent: true};
-		unit.im.x = x; unit.im.y = y;
-		units.push(unit);
+		var cci: Int =  0;
+		if(crt_object != null)
+			cci = crt_object.id;
+		var cni: Int = 10000000;
+		var cn: UnitBitmap2 = null;
+		for(unit in units)
+		{
+			if(unit.id > cci && unit.id < cni)
+			{
+				cni = unit.id;
+				cn = unit;
+			}
+		}
+
+		return cn;
 	}
 
+	public function getMaxId()
+	{
+		return max_id;
+	}
+
+	public function addInvisible(x: Float, y: Float, persist: Bool): layers.ConsumableLayer.UnitBitmap2
+	{
+		max_id++;
+		var unit: UnitBitmap2 = {im: new Bitmap(new BitmapData(2,2,0x0)), id: max_id, persistent: persist};
+		unit.im.x = x; unit.im.y = y;
+		units.push(unit);
+		return unit;
+	}
+
+	public function flush()
+	{
+		units = new Array<UnitBitmap2>();
+		max_id = 0;
+	}
+
+
+	///// IO
+
+	public function serialize() : String
+	{
+		var doc: Xml = Xml.createDocument();
+
+		var root = Xml.createElement("AliveLayer");
+		doc.addChild(root);
+
+		for(unit in units)
+		{
+			if(unit.im != null) //save those with pics, not the invisible ones, which come from xml
+			{
+				var id = Xml.createElement("unit");
+				id.set("id",""+unit.id);
+				id.set("x", ""+unit.im.x);
+				id.set("y", ""+unit.im.y);
+				id.set("persist", ""+unit.persistent);
+
+				root.addChild(id);
+			}
+
+
+		}
+		
+		return Printer.print(doc, true);
+	}
+
+	public function parseAndLoad(txt: String, imdir: String, assets: ExtendedAssetManifest)
+	{
+		var doc: Xml = Parser.parse(txt);
+
+
+		var root = doc.firstElement();
+		var elemit = root.elements();
+
+		units = new Array<UnitBitmap2>();
+
+		while(elemit.hasNext())
+		{
+			var id = elemit.next();
+			if(id.nodeName == "unit")
+			{
+				
+				var ub: UnitBitmap2 = {im : null, id: -1, persistent: false};
+				ub.id = Std.parseInt(id.get("id"));
+				var bmp = assets.getBitmap(imdir+"unit_"+ub.id+'.png');
+				if(bmp != null)
+					ub.im = new Bitmap(bmp);
+				else
+					ub.im = new Bitmap(new openfl.display.BitmapData(1,1));
+				ub.im.x = Std.parseFloat(id.get("x"));
+				ub.im.y = Std.parseFloat(id.get("y"));
+
+				var persist = id.get("persist");
+				if(persist == "true")
+					ub.persistent = true;
+				else
+					ub.persistent = false;
+
+				units.push(ub);
+			}
+		}
+	}
 
 }

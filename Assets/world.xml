@@ -1,29 +1,67 @@
 <world>
-	<grid rows="3" cols="4">
+	<grid rows="5" cols="5">
 		<row>
-			<scene src="supermarket" act="consume" snd1="punk-1" snd2="punk-color" snd3="noise-1"/>
-			<scene src="crossing" act="no" snd1="punk-1" snd2="punk-color" snd3="noise-1"/>
-			<scene src="img561" act="cross" gravity="player" snd1="punk-1" snd2="punk-color" snd3="noise-1"/>
-			<scene src="hospital" act="consume" snd1="punk-1" snd2="punk-color" snd3="noise-1"/>
+			<scene src="supermarket" act="consume" process_consumables="true" snd1="market">
+				<anim left="550" top="450" right="740" bottom="574" script="cyclic-region" src="dog" period="1.5" line1="2"/>
+			</scene>
+			<scene src="crossing" act="no" snd1="walking-1" snd2="walking-2" snd3="walking-3" snd4="walking-4"/>
+			<scene src="street-3-b" act="no" snd1="walking-1" snd2="walking-2" snd3="walking-3" snd4="walking-4"/>
+			<scene src="gap" act="cross" gravity="player" snd1="punk-1" snd2="punk-color" snd3="noise-1"/>
+			<scene src="volcano-e" act="no" gravity="all" snd1="punk-1" snd2="punk-color" snd3="noise-1"/>
+		</row>
+		<row>
+			<scene src="tattooer" act="color" snd1="punk-color"/>
+			<scene src="street-4" act="no" snd1="walking-1" snd2="walking-2" snd3="walking-3" snd4="walking-4"/>
+			<scene src="dormitory" act="cross" snd1="punk-1"/>
+			<scene src="forest" act="no" snd1="noise-1" />
+			<scene src="forest-2" act="no" snd1="noise-1" />
+		</row>
+		<row>
+			<scene src="bar" act="consume" snd1="market">
+				<point type="consumable" x="597" y="249" />
+			</scene>
+			<scene src="street-6" act="no" snd1="walking-1" snd2="walking-2" snd3="walking-3" snd4="walking-4"/>
+			<scene src="yard" act="no" snd1="yard-jam">
+				<anim left="725" top="244" right="785" bottom="304" script="rotating-clock"/>
+			</scene>
+			<scene src="path" act="cross" snd1="noise-1"/>
+			<scene src="hospital" act="consume" snd1="market" process_consumables="true"/>
+		</row>
+		<row>
+			<scene src="empty" act="no"/>
+			<scene src="street-4" act="no" snd1="walking-1" snd2="walking-2" snd3="walking-3" snd4="walking-4"/>
+			<scene src="skatepark" act="color" snd1="punk-color"/>
+			<scene src="race track" act="no" script="racetrackinit">
+				<point type="guide" x="0" y="-60" />
+				<point type="guide" x="720" y="680" />
+			</scene>
+			<scene src="street-4" act="no" snd1="walking-1" snd2="walking-2" snd3="walking-3" snd4="walking-4"/>
 		</row>
 		<row>
 			<scene src="eklezio kermess ds" act="cross" snd1="punk-1" snd2="punk-color" snd3="noise-1">
 				<anim left="250" top="100" right="350" bottom="160" script="rotating-clock"/>
 			</scene>
-			<scene src="dialog" act="cross" snd1="punk-1" snd2="punk-color" snd3="noise-1"/>
-			<scene src="dormitory" act="cross" snd1="punk-1" snd2="punk-color" snd3="noise-1"/>
-			<scene src="volcano" act="cross" gravity="all" snd1="punk-1" snd2="punk-color" snd3="noise-1"/>
-		</row>
-		<row>
-			<scene src="bar" act="consume" snd1="punk-1" snd2="punk-color" snd3="noise-1">
-				<point type="consumable" x="597" y="249" />
-			</scene>
-			<scene src="street-6" act="no" snd1="punk-1" snd2="punk-color" snd3="noise-1"/>
-			<scene src="yard" act="no" snd1="punk-1" snd2="punk-color" snd3="noise-1"/>
-			<scene src="path" act="cross" snd1="punk-1" snd2="punk-color" snd3="noise-1"/>
+			<scene src="street-2" act="no" snd1="walking-1" snd2="walking-2" snd3="walking-3" snd4="walking-4"/>
+			<scene src="street-3" act="no" snd1="walking-1" snd2="walking-2" snd3="walking-3" snd4="walking-4"/>
+			<scene src="street-3-a" act="no" snd1="walking-1" snd2="walking-2" snd3="walking-3" snd4="walking-4"/>
+			<scene src="street-1" act="no" snd1="walking-1" snd2="walking-2" snd3="walking-3" snd4="walking-4"/>
 		</row>
 	</grid>
 	<inside>
-		<scene src="start room 2" act="no" parent="dormitory" left="640" top="50" right="790" bottom="200" snd1="punk-1" snd2="punk-color" snd3="noise-1"/>
+		<scene src="start room 2" act="no" parent="dormitory" left="640" top="50" right="790" bottom="220" snd1="jailed-in"/>
 	</inside>
+	<screens>
+		<scene src="title screen" act="skip" cat="start" snd1="title-screen">
+				<anim left="240" top="430" right="640" bottom="530" script="cyclic-region" src="press space" period="0.5" line1="1" line2="1"/>
+		</scene>
+		<scene src="img559" act="skip" cat="start" snd1="liberty-book"/>
+		<scene ref="start room 2" cat="start" />
+		<scene src="dialog" act="guide" script="dialog">
+			<point type="guide" x="288" y="202" />
+			<point type="guide" x="464" y="223" />
+			<point type="guide" x="317" y="370" />
+			<point type="guide" x="441" y="468" />
+		</scene>
+		<scene src="gameend" act="no" cat="end" />
+	</screens>
 </world>

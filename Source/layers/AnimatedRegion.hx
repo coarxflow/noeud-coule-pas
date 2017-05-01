@@ -24,4 +24,12 @@ class AnimatedRegion {
 	public function insertStep() {
 		
 	}
+
+	public function offset(dx: Int, dy: Int) {
+		if(sprite != null)
+		{
+			sprite.x += dx;
+			sprite.y += dy;
+		}
+	}
 }

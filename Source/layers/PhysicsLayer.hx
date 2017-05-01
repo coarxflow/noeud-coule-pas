@@ -9,6 +9,7 @@ import openfl.geom.Point;
 import lime.math.color.ARGB;
 
 typedef CollisionResult = {
+	@:optional var chk_rect: Rectangle;
 	var left_in: Int;
 	var right_in: Int;
 	var top_in: Int;
@@ -18,6 +19,8 @@ typedef CollisionResult = {
 
 class PhysicsLayer {
 
+	public static inline var MASK_DOWNSAMPLING_FACTOR = 4;
+
 	public static var NO_COLLISION: Int = 1000;
 
 	public static var static_pmask: LogicMask;
@@ -25,6 +28,9 @@ class PhysicsLayer {
 	static var decorSprite: Bitmap;
 
 	public static var frameCode: UInt = Math.round(Math.random()*255);
+
+	public static var static_collisions: Map<Int, CollisionResult> = new Map<Int, CollisionResult> ();
+	public static var moving_collisions: Map<Int, CollisionResult> = new Map<Int, CollisionResult> ();
 
 	public static function updateStaticMask(pmask: LogicMask)
 	{
@@ -39,12 +45,17 @@ class PhysicsLayer {
 			frameCode = 2;
 			moving_pmask.fill(0);
 		}
+
+		//reset collision dictionnaries
+		static_collisions = new Map<Int, CollisionResult> ();
+		moving_collisions = new Map<Int, CollisionResult> ();
 	}
 
 	public static function registerMovingElement(targetCoordinateSpace:DisplayObject, el: Bitmap)
 	{
 		var rm: Rectangle = el.getBounds(targetCoordinateSpace);
 		var pt: Point = new Point(0,0);
+
 
 		for (x in 0 ... el.bitmapData.width) {
 			for (y in 0 ...el.bitmapData.height) {
@@ -64,19 +75,29 @@ class PhysicsLayer {
 		moving_pmask = new LogicMask(Math.floor(decorSprite.width), Math.floor(decorSprite.height), 1);
 	}
 
-	public static function checkForColision(targetCoordinateSpace:DisplayObject, movingSprite:Bitmap) : CollisionResult
+	public static function checkForColision(targetCoordinateSpace:DisplayObject, movingSprite:Bitmap, aliveId: Int) : CollisionResult
 	{
 		var cr: CollisionResult = {left_in : 0, right_in : 0, top_in : 0, bottom_in : 0};
+		var cr2: CollisionResult = {left_in : 0, right_in : 0, top_in : 0, bottom_in : 0};
+		var cr3: CollisionResult = {left_in : 0, right_in : 0, top_in : 0, bottom_in : 0};
 
-		checkCollisionWithMask(targetCoordinateSpace, movingSprite, static_pmask, 255, cr);
-		checkCollisionWithMask(targetCoordinateSpace, movingSprite, moving_pmask, frameCode, cr);
+		if(checkCollisionWithMask(targetCoordinateSpace, movingSprite, static_pmask, 255, cr))
+			static_collisions.set(aliveId, cr);
+		if(checkCollisionWithMask(targetCoordinateSpace, movingSprite, moving_pmask, frameCode, cr2))
+			moving_collisions.set(aliveId, cr2);
 		
-		return cr;
+		//merge collision results
+		cr3.left_in = Math.round(Math.max(cr2.left_in, cr.left_in));
+		cr3.right_in = Math.round(Math.max(cr2.right_in, cr.right_in));
+		cr3.top_in = Math.round(Math.max(cr2.top_in, cr.top_in));
+		cr3.bottom_in = Math.round(Math.max(cr2.bottom_in, cr.bottom_in));
+
+		return cr3;
 
 	}
 
 
-	static function checkCollisionWithMask(targetCoordinateSpace:DisplayObject, movingSprite:Bitmap, mask:LogicMask, chk_val:UInt, cr: CollisionResult)
+	static function checkCollisionWithMask(targetCoordinateSpace:DisplayObject, movingSprite:Bitmap, mask:LogicMask, chk_val:UInt, cr: CollisionResult) : Bool
 	{
 
 		var rm: Rectangle = movingSprite.getBounds(targetCoordinateSpace);
@@ -86,6 +107,8 @@ class PhysicsLayer {
 
 		var val1: UInt = 0;
 		var col2: ARGB = ARGB.create(255,0,0,0);
+
+		var collided: Bool = false;
 
 		if(!ri.isEmpty())
 		{
@@ -150,27 +173,34 @@ class PhysicsLayer {
 			//compute distance of closest colliding coords from border
 			if(left_from_center != NO_COLLISION)
 			{
-				cr.left_in = Math.round(Math.max(Math.round(ri.width/2 - left_from_center), cr.left_in));
+				cr.left_in = Math.round(ri.width/2 - left_from_center);
+				collided = true;
 			}
 			if(right_from_center != NO_COLLISION)
 			{
-				cr.right_in = Math.round(Math.max(Math.round(ri.width/2 - right_from_center), cr.right_in));
+				cr.right_in = Math.round(ri.width/2 - right_from_center);
+				collided = true;
 			}
 			if(top_from_center != NO_COLLISION)
 			{
-				cr.top_in = Math.round(Math.max(Math.round(ri.height/2 - top_from_center), cr.top_in));
+				cr.top_in = Math.round(ri.height/2 - top_from_center);
+				collided = true;
 			}
 			if(bottom_from_center != NO_COLLISION)
 			{
-				cr.bottom_in = Math.round(Math.max(Math.round(ri.height/2 - bottom_from_center), cr.bottom_in));
+				cr.bottom_in = Math.round(ri.height/2 - bottom_from_center);
+				collided = true;
 			}
 
 
 		}
 
-		//return cr;
+		cr.chk_rect = rm;
+
+		return collided;
 	}
 
+//what is it??
 	public static function checkContactWithMask(movingSprite :Bitmap, mask:LogicMask, chk_val:UInt, x_splits: Int, y_splits: Int, x_cell: Int, y_cell: Int) : Bool
 	{
 
@@ -223,6 +253,24 @@ class PhysicsLayer {
 		}
 
 		return contact;
+	}
+
+	public static function closestColliderPoint(cr: CollisionResult) : Point
+	{
+
+		var pt = new Point(0,0);
+
+		if(cr.left_in > cr.right_in)
+			pt.x = cr.chk_rect.x+cr.left_in;
+		else
+			pt.x = cr.chk_rect.x+cr.chk_rect.width-cr.left_in;
+
+		if(cr.top_in > cr.bottom_in)
+			pt.y = cr.chk_rect.y+cr.top_in;
+		else
+			pt.y = cr.chk_rect.y+cr.chk_rect.height-cr.bottom_in;
+
+		return pt;
 	}
 
 }

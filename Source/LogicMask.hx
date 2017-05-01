@@ -41,18 +41,22 @@ class LogicMask {
 
 	public function getXY(x:Int, y:Int): UInt
 	{
+		if(x > width || x < 0 || y > height || y < 0)
+			return 0;
 		return buffer.__get(x+y*width);
 	}
 
 
 	public function setXY(x:Int, y:Int, val: UInt)
 	{
+		if(x > width || x < 0 || y > height || y < 0)
+			return;
 		buffer.__set(x+y*width, val);
 	}
 
-	public function toBitmap(rchannel:Int = 0xFF, gchannel:Int = 0xFF, bchannel:Int = 0xFF):Bitmap
+	public function toBitmap(rchannel:Int = 0xFF, gchannel:Int = 0xFF, bchannel:Int = 0xFF, base_col: Int = 0xFF000000, fill_col: Int = 0xFF000000):Bitmap
 	{
-		var image: BitmapData = new BitmapData(width, height,true,0xFF000000);
+		var image: BitmapData = new BitmapData(width, height,true, fill_col);
 		var pix: UInt;
 		for(x in 0...width)
 			for(y in 0...height)
@@ -60,16 +64,17 @@ class LogicMask {
 				if(buffer.__get(x+y*width) != 0)
 				{
 					pix = buffer.__get(x+y*width);
-					image.setPixel32(x,y, 0xFF000000 | ((rchannel & pix) << 16) | ((gchannel & pix) << 8) | (bchannel & pix));
+					image.setPixel32(x,y, base_col | ((rchannel & pix) << 16) | ((gchannel & pix) << 8) | (bchannel & pix));
 				}
+
 			}
 		
 		return new Bitmap(image);
 	}
 
-	public static function fromBitmap(bmp: Bitmap):LogicMask
+	public static function fromBitmap(bmp: Bitmap, downsampling_factor: Int):LogicMask
 	{
-		var lm: LogicMask = new LogicMask(bmp.bitmapData.width,bmp.bitmapData.height,1);
+		var lm: LogicMask = new LogicMask(bmp.bitmapData.width,bmp.bitmapData.height,downsampling_factor);
 		for(x in 0...bmp.bitmapData.width)
 			for(y in 0...bmp.bitmapData.height)
 			{
@@ -106,7 +111,7 @@ class LogicMask {
 				pix = other.buffer.__get(x+y*width);
 				if(pix != 0)
 				{
-					if(buffer.__get(x+y*width) == 0 || overwrite)
+					if(pix > buffer.__get(x+y*width) || overwrite)
 					{
 						buffer.__set(x+y*width, pix);
 					}
@@ -144,7 +149,7 @@ class LogicMask {
 		for(x in 0...width)
 			for(y in 0...height)
 			{
-				if(buffer.__get(x+y*width) != 0)
+				if(buffer.__get(x+y*width) == 255)
 				{
 					for(xs in -se_end...se_end)
 						for(ys in -se_end...se_end)
@@ -167,7 +172,7 @@ class LogicMask {
 		for(x in 0...width)
 			for(y in 0...height)
 			{
-				if(buffer.__get(x+y*width) == 0)
+				if(buffer.__get(x+y*width) != 255)
 				{
 					for(xs in -se_end...se_end)
 						for(ys in -se_end...se_end)

@@ -21,7 +21,10 @@ class Jukebox {
 		scene_sounds  = new Array<String> ();
 
 		if(crt_sound_channel != null)
+		{
 			crt_sound_channel.stop();
+			Sys.println("stop channel "+crt_sound_channel.toString());
+		}
 	}
 
 	public static function addSoundForScene(path: String)
@@ -50,10 +53,45 @@ class Jukebox {
 
 		Sys.println("choose "+i+" "+p+" "+loaded_sounds[i]);
 
-		/*if(i != -1)
+		if(crt_sound_channel != null)
+			crt_sound_channel.stop();
+		
+		if(i != -1)
 			crt_sound_channel = loaded_sounds[i].play(0,8);
 		else
-			crt_sound_channel = null;*/
+			crt_sound_channel = null;
 
+	}
+
+	//sound effects
+	public static inline var EFFECTS_DIR: String = "soundeffects/";
+	public static inline var EFFECTS_EXT: String = ".ogg";
+	static var rushSoundEffect : Sound;
+	static var paintSoundEffect : Sound;
+	static var crunchSoundEffect : Sound;
+	static var crt_sound_channel2 : SoundChannel;
+	public static function loadSoundEffects() {
+		rushSoundEffect = Assets.getMusic(EFFECTS_DIR+"ripping"+EFFECTS_EXT);
+		paintSoundEffect = Assets.getMusic(EFFECTS_DIR+"spray"+EFFECTS_EXT);
+		Sys.println("load "+paintSoundEffect);
+		crunchSoundEffect = Assets.getMusic(EFFECTS_DIR+"crunch"+EFFECTS_EXT);
+	}
+
+	public static function playRippingSound()
+	{
+		if(rushSoundEffect != null)
+		crt_sound_channel2 = rushSoundEffect.play();
+	}
+
+	public static function playCrunchSound()
+	{
+		if(crunchSoundEffect != null)
+		crt_sound_channel2 = crunchSoundEffect.play();
+	}
+
+	public static function playSpraySound()
+	{
+		if(paintSoundEffect != null)
+		crt_sound_channel2 = paintSoundEffect.play();
 	}
 }

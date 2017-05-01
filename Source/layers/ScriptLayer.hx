@@ -1,3 +1,5 @@
+package layers;
+
 import openfl.display.Shape;
 import openfl.display.Sprite;
 import openfl.display.BitmapData;
@@ -19,54 +21,77 @@ import haxe.xml.Printer;
 
 import lime.math.color.ARGB;
 
+import layers.AliveLayer;
+
 import reaction_scripts.ReactionScriptBase;
 
 
-class ScriptLayer extends Sprite
+class ScriptLayer
 {
 
-	static var mask : LogicMask;
-	
-	public function new()
-	{
+	public static inline var MASK_DOWNSAMPLING_FACTOR = 4;
 
+	static var smask : LogicMask;
+	static var decorSprite: Bitmap;
+
+	static var scriptsBank: Map<Int, ReactionScriptBase>;
+
+	public static var enabled: Bool = true;
+	
+	public static function buildBank()
+	{
+		scriptsBank = new Map<Int, ReactionScriptBase>();
+		scriptsBank.set(1, new reaction_scripts.EnterDialog());
+		scriptsBank.set(2, new reaction_scripts.DancingGround());
+		scriptsBank.set(9, new reaction_scripts.RunningTrack());
 	}
 
 	public static function setMask(mask: LogicMask)
 	{
-		this.mask = mask;
+		smask = mask;
 	}
 
-	public static function getMask()
+	public static function getMask(): LogicMask
 	{
-		return mask;
+		return smask;
 	}
 
-	public static function reactToSprite(targetCoordinateSpace:DisplayObject, sprite: Bitmap)
+	public static function getMaskImage() : openfl.display.Bitmap
 	{
-		var rm: Rectangle = movingSprite.getBounds(targetCoordinateSpace);
+		return smask.toBitmap(0x44, 0xFF, 0x33, 0x66000000, 0x0);
+	}
+
+	public static function updateDecorSprite(sprite: Bitmap)
+	{
+		decorSprite = sprite;
+	}
+
+	public static function reactToSprite(targetCoordinateSpace:DisplayObject, sprite: Bitmap, id: Int)
+	{
+		if(!enabled)
+			return;
+
+		var rm: Rectangle = sprite.getBounds(targetCoordinateSpace);
 
 		var pt: Point = new Point(rm.x + rm.width/2, rm.y + rm.height/2);
 		pt = decorSprite.globalToLocal(pt);
-		var scnum: Int = mask.getXY(Math.round(pt.x/mask.downsampling_factor), Math.round(pt.y/mask.downsampling_factor));
+		var scnum: Int = Math.round(smask.getXY(Math.round(pt.x/smask.downsampling_factor), Math.round(pt.y/smask.downsampling_factor))/PAINT_VALUE_MULTIPLIER);
 
 		var script: ReactionScriptBase = getReactionScriptWithNum(scnum);
-		script.trigger(sprite);
+		if(script != null)
+			script.trigger(sprite, id);
 	}
 
 	public static function getReactionScriptWithNum(scnum: Int) : ReactionScriptBase
 	{
-		switch(scnum)
-		{
-			case 1:
-
-		}
+		return scriptsBank.get(scnum);
 	}
 
 	public static var currentPaintScriptNum: UInt = 0;
 
-	static inline var PAINT_RADIUS : Int = 15;
-	static inline var PAINT_RADIUS_SQ : Int = 225;
+	static inline var PAINT_RADIUS : Int = 30;
+	static inline var PAINT_RADIUS_SQ : Int = 900;
+	static inline var PAINT_VALUE_MULTIPLIER = 25;
 	public static function paint(sprite: Bitmap)
 	{
 		var rm: Rectangle = sprite.getBounds(Main.targetCoordinateSpace);
@@ -77,7 +102,7 @@ class ScriptLayer extends Sprite
 			for(y in -PAINT_RADIUS...PAINT_RADIUS)
 			{
 				if(Math.pow(x,2)+Math.pow(y,2)<=PAINT_RADIUS_SQ)
-					bmp.setXY(PAINT_RADIUS+center.x, PAINT_RADIUS+center.y, currentPaintScriptNum);
+					smask.setXY(Math.round((x+center.x)/smask.downsampling_factor), Math.round((y+center.y)/smask.downsampling_factor), currentPaintScriptNum*PAINT_VALUE_MULTIPLIER);
 			}
 	}
 
