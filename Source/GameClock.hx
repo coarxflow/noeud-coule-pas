@@ -13,7 +13,7 @@ class GameClock {
 	public static var actTime: Float = 0;
 	static var lastActiveFrameTime : Float = 0;
 
-	public static inline var ALIVE_TIME:Float = 160;
+	public static inline var ALIVE_TIME:Float = 260;
 
 	public static function updateActiveTime() : Bool
 	{

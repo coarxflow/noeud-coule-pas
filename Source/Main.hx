@@ -71,8 +71,10 @@ class Main extends Sprite {
 	var scriptMask: LogicMask;
 	var scriptMaskImage: Bitmap;
 
+	public var tipsLayer: layers.TipsLayer;
+
 	public var decorSprite: Bitmap;
-	var decorSpriteTmp: Bitmap;
+	public var decorSpriteTmp: Bitmap;
 
 	public var fps : FPS;
 
@@ -170,6 +172,8 @@ class Main extends Sprite {
 
 		removeChild(consumableLayer);
 
+		removeChild(tipsLayer);
+
 		AnimationLayer.clearList();
 	}
 
@@ -219,6 +223,10 @@ class Main extends Sprite {
 
 		ScriptLayer.updateDecorSprite(decorSprite);
 		ScriptLayer.setMask(scriptMask);
+
+		tipsLayer = scene.getTipsLayer();
+		addChild(tipsLayer);
+		tipsLayer.registerAct(); //update time to current
 		
 
 		PlayerControl.sceneRebelAction = world.current_scene.action;
@@ -272,12 +280,13 @@ class Main extends Sprite {
 		{
 			PhysicsLayer.newFrameForMovingMask();
 	 	}
-	 	if(PlayerControl.acting || KeyboardInputs.spaceKey)
+	 	/*if(PlayerControl.acting || KeyboardInputs.spaceKey)*/
 	 		PlayerControl.playerAct(this);
 	 	aliveLayer.unitsAct(this, frameCount%ALIVE_UPDATE_RATE, ALIVE_UPDATE_RATE);
-	 	if(!PlayerControl.acting && !KeyboardInputs.spaceKey)
-	 		PlayerControl.playerAct(this);
+	 	/*if(!PlayerControl.acting && !KeyboardInputs.spaceKey)
+	 		PlayerControl.playerAct(this);*/
 	 	PlayerControl.updateActingStatus();
+	 	PlayerControl.triggerPlayerPositionReactions(this);
 
 	 	if(scene.screen_script != null)
 			scene.screen_script.runStep();

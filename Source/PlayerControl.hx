@@ -180,10 +180,15 @@ class PlayerControl
 
 			var entryPoint: Point = new Point(playerSprite.x,playerSprite.y);
 
-
 			if(mainScene.checkInnerScene(entryPoint))
 			{
-				playerSprite.x = entryPoint.x;
+				Sys.println("enter inside at "+entryPoint+" crt "+playerSprite.x);
+				if(entryPoint.x < mainScene.sceneLeft)
+					playerSprite.x = entryPoint.x + ENTER_DISTANCE;
+				else if(entryPoint.x + playerSprite.width > mainScene.sceneRight)
+					playerSprite.x = entryPoint.x - playerSprite.width - ENTER_DISTANCE;
+				else
+					playerSprite.x = entryPoint.x;
 				playerSprite.y = entryPoint.y;
 			}
 			else if(playerSprite.x < mainScene.sceneLeft)
@@ -193,6 +198,10 @@ class PlayerControl
 					playerSprite.x = entryPoint.x - playerSprite.width - ENTER_DISTANCE;
 					playerSprite.y = entryPoint.y;
 				}
+				else
+				{
+					playerSprite.x = mainScene.sceneLeft;
+				}
 			}
 			else if (playerSprite.x + playerSprite.width > mainScene.sceneRight)
 			{
@@ -201,6 +210,10 @@ class PlayerControl
 					playerSprite.x = entryPoint.x + ENTER_DISTANCE;
 					playerSprite.y = entryPoint.y;
 				}
+				else
+				{
+					playerSprite.x = mainScene.sceneRight - playerSprite.width;
+				}
 			}
 			else if(playerSprite.y < mainScene.sceneTop)
 			{
@@ -208,6 +221,10 @@ class PlayerControl
 				{
 					playerSprite.x = entryPoint.x;
 					playerSprite.y = entryPoint.y - playerSprite.height - ENTER_DISTANCE;
+				}
+				else
+				{
+					playerSprite.y = mainScene.sceneTop;
 				}
 			}
 			else if (playerSprite.y + playerSprite.height > mainScene.sceneBottom)
@@ -218,20 +235,32 @@ class PlayerControl
 					playerSprite.x = entryPoint.x;
 					playerSprite.y = entryPoint.y + ENTER_DISTANCE;
 				}
+				else
+				{
+					playerSprite.y = mainScene.sceneBottom - playerSprite.height;
+				}
 			}
 
 		//}
-
-		ScriptLayer.reactToSprite(targetCoordinateSpace, playerSprite, aliveUnitId);
 
 		PhysicsLayer.registerMovingElement(targetCoordinateSpace, playerSprite);
 
 		//Sys.println("player "+playerSprite.x+" "+playerSprite.y);
 	}
 
+	public static function triggerPlayerPositionReactions(targetCoordinateSpace: DisplayObject)
+	{
+		ScriptLayer.reactToSprite(targetCoordinateSpace, playerSprite, aliveUnitId);
+
+		mainScene.tipsLayer.tryTriggerTips(targetCoordinateSpace, playerSprite, mainScene.decorSprite);
+	}
+
 	public static function updateActingStatus() {
 		if(rushing || consume || paint)
+		{
 			acting = true;
+			mainScene.tipsLayer.registerAct();
+		}
 		else
 			acting = false;
 	}

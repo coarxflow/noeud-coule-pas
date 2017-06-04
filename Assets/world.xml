@@ -1,36 +1,52 @@
 <world>
 	<grid rows="5" cols="5">
 		<row>
-			<scene src="supermarket" act="consume" process_consumables="true" snd1="market">
+			<scene src="supermarket2" act="consume" process_consumables="true" snd1="market">
 				<anim left="550" top="450" right="740" bottom="574" script="cyclic-region" src="dog" period="1.5" line1="2"/>
+				<tip left="363" top="11" right="575" bottom="92" script="act-tip" src="consume_tip" delay="10"/>
 			</scene>
 			<scene src="crossing" act="no" snd1="walking-1" snd2="walking-2" snd3="walking-3" snd4="walking-4"/>
 			<scene src="street-3-b" act="no" snd1="walking-1" snd2="walking-2" snd3="walking-3" snd4="walking-4"/>
-			<scene src="gap" act="cross" gravity="player" snd1="punk-1" snd2="punk-color" snd3="noise-1"/>
+			<scene src="gap2" act="cross" gravity="player" snd1="punk-1" snd2="punk-color" snd3="noise-1">
+				<tip left="308" top="206" right="508" bottom="306" script="act-tip" src="cross_tip" delay="10"/>
+			</scene>
 			<scene src="volcano-e" act="no" gravity="all" snd1="punk-1" snd2="punk-color" snd3="noise-1"/>
 		</row>
 		<row>
-			<scene src="tattooer" act="color" snd1="punk-color"/>
+			<scene src="tattooer2" act="color" snd1="punk-color">
+				<tip left="484" top="292" right="685" bottom="388" script="act-tip" src="tag_tip" delay="10"/>
+			</scene>
 			<scene src="street-4" act="no" snd1="walking-1" snd2="walking-2" snd3="walking-3" snd4="walking-4"/>
-			<scene src="dormitory" act="cross" snd1="punk-1"/>
+			<scene src="dormitory 2" act="cross" snd1="punk-1">
+				<anim left="350" top="107" right="556" bottom="173" script="shaking-region" src="comrades_text" period="0.05" delay="0"/>
+				<tip left="252" top="330" right="524" bottom="421" script="inplace"/>
+				<tip left="373" top="415" right="470" bottom="449" script="inplace" delay="10" />
+			</scene>
 			<scene src="forest" act="no" snd1="noise-1" />
 			<scene src="forest-2" act="no" snd1="noise-1" />
 		</row>
 		<row>
-			<scene src="bar" act="consume" snd1="market">
+			<scene src="bar2" act="consume" snd1="market">
 				<point type="consumable" x="597" y="249" />
+				<tip left="535" top="305" right="747" bottom="386" script="act-tip" src="consume_tip"/>
 			</scene>
 			<scene src="street-6" act="no" snd1="walking-1" snd2="walking-2" snd3="walking-3" snd4="walking-4"/>
 			<scene src="yard" act="no" snd1="yard-jam">
 				<anim left="725" top="244" right="785" bottom="304" script="rotating-clock"/>
 			</scene>
-			<scene src="path" act="cross" snd1="noise-1"/>
-			<scene src="hospital" act="consume" snd1="market" process_consumables="true"/>
+			<scene src="path" act="cross" snd1="noise-1">
+				<tip left="540" top="110" right="740" bottom="210" script="act-tip" src="cross_tip" delay="10"/>
+			</scene>
+			<scene src="hospital2" act="consume" snd1="market" process_consumables="true" script="hospitalsick">
+				<tip left="546" top="146" right="758" bottom="227" script="act-tip" src="consume_tip" period="0.05" delay="10"/>
+			</scene>
 		</row>
 		<row>
 			<scene src="empty" act="no"/>
 			<scene src="street-4" act="no" snd1="walking-1" snd2="walking-2" snd3="walking-3" snd4="walking-4"/>
-			<scene src="skatepark" act="color" snd1="punk-color"/>
+			<scene src="skatepark" act="color" snd1="punk-color">
+				<tip left="454" top="330" right="655" bottom="416" script="act-tip" src="tag_tip" delay="10"/>
+			</scene>
 			<scene src="race track" act="no" script="racetrackinit">
 				<point type="guide" x="0" y="-60" />
 				<point type="guide" x="720" y="680" />
@@ -44,18 +60,25 @@
 			<scene src="street-2" act="no" snd1="walking-1" snd2="walking-2" snd3="walking-3" snd4="walking-4"/>
 			<scene src="street-3" act="no" snd1="walking-1" snd2="walking-2" snd3="walking-3" snd4="walking-4"/>
 			<scene src="street-3-a" act="no" snd1="walking-1" snd2="walking-2" snd3="walking-3" snd4="walking-4"/>
-			<scene src="street-1" act="no" snd1="walking-1" snd2="walking-2" snd3="walking-3" snd4="walking-4"/>
+			<scene src="street-1-g" act="no" snd1="walking-1" snd2="walking-2" snd3="walking-3" snd4="walking-4"/>
 		</row>
 	</grid>
 	<inside>
-		<scene src="start room 2" act="no" parent="dormitory" left="640" top="50" right="790" bottom="220" snd1="jailed-in"/>
+		<scene src="start room 3" act="no" parent="dormitory 2" left="617" top="62" right="779" bottom="205" snd1="jailed-in">
+			<tip left="324" top="294" right="499" bottom="387" script="inplace" delay="2" />
+			<tip left="469" top="457" right="570" bottom="519" script="inplace" delay="10" />
+		</scene>
+		<scene src="corridor" act="no" parent="dormitory 2" left="610" top="198" right="758" bottom="332" snd1="jailed-in">
+			<tip left="50" top="184" right="336" bottom="302" script="inplace" />
+			<tip left="53" top="363" right="353" bottom="478" script="inplace" />
+		</scene>
 	</inside>
 	<screens>
 		<scene src="title screen" act="skip" cat="start" snd1="title-screen">
 				<anim left="240" top="430" right="640" bottom="530" script="cyclic-region" src="press space" period="0.5" line1="1" line2="1"/>
 		</scene>
-		<scene src="img559" act="skip" cat="start" snd1="liberty-book"/>
-		<scene ref="start room 2" cat="start" />
+		<scene src="book2" act="skip" cat="start" snd1="liberty-book"/>
+		<scene ref="start room 3" cat="start" />
 		<scene src="dialog" act="guide" script="dialog">
 			<point type="guide" x="288" y="202" />
 			<point type="guide" x="464" y="223" />

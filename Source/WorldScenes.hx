@@ -21,6 +21,7 @@ typedef AnimInfo = {
 	var script:String;
 	@:optional var source:String;
 	@:optional var period:Float;
+	@:optional var delay:Float;
 	@:optional var nlines: Array<Int>;
 } 
 
@@ -31,6 +32,7 @@ typedef SceneInfo = {
 	var action:Main.RebelAction;
 	@:optional var domain:Rectangle;
 	@:optional var anims:Array<AnimInfo>;
+	@:optional var tips:Array<AnimInfo>;
 	@:optional var process_consumables:Bool;
 	@:optional var invisible_consumables:Array<Point>;
 	@:optional var invisible_points:Array<Point>;
@@ -68,7 +70,7 @@ public function new()
 
 public var game_start : Bool = true;
 var first_scenes : Array<SceneInfo> = new Array<SceneInfo>();
-var start_index : Int = 0;
+var start_index : Int = 2;
 public function firstScene() : SceneProcessor
 {
 	current_scene = first_scenes[start_index];
@@ -158,8 +160,9 @@ public function nextScene(side:PlayerControl.PlayerLeaveSide, outBoundPoint: Poi
 
 	if(side == PlayerControl.PlayerLeaveSide.Inner)
 	{
-		outBoundPoint.x = PlayerControl.mainScene.sceneLeft + (outBoundPoint.x - next_scene.domain.left) / next_scene.domain.width * PlayerControl.mainScene.decorSprite.width;
-		outBoundPoint.y = PlayerControl.mainScene.sceneTop + (outBoundPoint.y - next_scene.domain.top) / next_scene.domain.height * PlayerControl.mainScene.decorSprite.height;
+		Sys.println("compute enter inside "+PlayerControl.mainScene.sceneLeft+" + "+(outBoundPoint.x - next_scene.domain.left) / next_scene.domain.width+"*"+PlayerControl.mainScene.decorSpriteTmp.width);
+		outBoundPoint.x = /*PlayerControl.mainScene.sceneLeft + */(outBoundPoint.x - next_scene.domain.left) / next_scene.domain.width * PlayerControl.mainScene.decorSpriteTmp.width;
+		outBoundPoint.y = /*PlayerControl.mainScene.sceneTop + */(outBoundPoint.y - next_scene.domain.top) / next_scene.domain.height * PlayerControl.mainScene.decorSpriteTmp.height;
 	}
 	else if(current_scene.insertion == InsideScene)
 	{
@@ -291,6 +294,7 @@ public function loadScene(next_scene:SceneInfo) : SceneProcessor
 
 		Sys.println("process anims and points lists");
 		scene.processAnimations(next_scene.anims);
+		scene.processTips(next_scene.tips);
 		scene.processInvisibleConsumables(next_scene.invisible_consumables, true);
 		scene.processInvisibleConsumables(next_scene.invisible_points, true);
 
@@ -446,12 +450,13 @@ function parseScene(node: Xml, crt_insert : SceneInsertion)
 	}
 
 	si.anims = new Array<AnimInfo>();
+	si.tips = new Array<AnimInfo>();
 	var elemit2 = node.elements();
 	while(elemit2.hasNext())
 	{
 		var id2 = elemit2.next();
 		
-		if(id2.nodeName == "anim")
+		if(id2.nodeName == "anim" || id2.nodeName == "tip")
 		{
 			var anim: AnimInfo = {domain: null, script: id2.get("script")};
 
@@ -463,6 +468,7 @@ function parseScene(node: Xml, crt_insert : SceneInsertion)
 
 			anim.source = id2.get("src");
 			anim.period = Std.parseFloat(id2.get("period"));
+			anim.delay = Std.parseFloat(id2.get("delay"));
 
 			var cols_at_line:String = id2.get("line1");
 			if(cols_at_line != null)
@@ -474,8 +480,10 @@ function parseScene(node: Xml, crt_insert : SceneInsertion)
 				i++;
 				cols_at_line = id2.get("line"+i);
 			}
-
-			si.anims.push(anim);
+			if(id2.nodeName == "anim")
+				si.anims.push(anim);
+			else if (id2.nodeName == "tip")
+				si.tips.push(anim);
 		}
 		if(id2.nodeName == "point")
 		{

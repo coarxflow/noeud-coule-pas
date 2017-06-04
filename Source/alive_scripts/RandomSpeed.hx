@@ -11,12 +11,14 @@ class RandomSpeed extends AliveScriptBase
 	private var vx: Float;
 	private var vy: Float;
 
-	private static inline var AMPLITUDE = 2;
+	private var AMPLITUDE: Float = 2;
 
-	public override function new()
+	public override function new(amp: Float = 2)
 	{
-		vx = AMPLITUDE*(Math.random()-0.5);
+		AMPLITUDE = amp;
+		vx = -AMPLITUDE*(Math.random()-0.5);
 		vy = AMPLITUDE*(Math.random()-0.5);
+
 
 		NUM = 1;
 	}
@@ -25,6 +27,7 @@ class RandomSpeed extends AliveScriptBase
 	{
 		vx += AMPLITUDE*(Math.random()-0.5)/20;
 		vy += AMPLITUDE*(Math.random()-0.5)/20;
+		Sys.println(Math.random()+" "+vx);
 		return new Point(vx,vy);
 	}
 }

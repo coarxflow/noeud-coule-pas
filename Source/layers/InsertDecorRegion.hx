@@ -14,16 +14,23 @@ class InsertDecorRegion extends AnimatedRegion {
 	var insertData: BitmapData;
 	var insertPhysic: LogicMask;
 
-	public function new(region: Rectangle, targetSprite: Bitmap, targetPhysicLayer: LogicMask, insertData: BitmapData) {
+	var draw_time: Float;
+
+	public function new(region: Rectangle, targetSprite: Bitmap, targetPhysicLayer: LogicMask, insertData: BitmapData, delay: Float = 0) {
 		super(region);
 		this.targetSprite = targetSprite;
 		this.targetPhysicLayer = targetPhysicLayer;
 		this.insertData = insertData;
+		this.draw_time = Sys.time()+delay;
 
 		this.insertPhysic = SceneProcessor.filterColor(this.insertData, SceneProcessor.blackfilter);
 	}
 
 	public override function insertStep() {
+
+		if(Sys.time() < draw_time)
+			return;
+
 		var xb: Int = Math.floor(region.x);
 		var yb: Int = Math.floor(region.y);
 		var xe: Int = Math.ceil(region.x+region.width);

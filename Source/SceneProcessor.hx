@@ -64,6 +64,9 @@ class SceneProcessor {
 
 	var anims: Array<layers.AnimatedRegion>;
 
+	var tips_layer: layers.TipsLayer; //tips layer is an instance, unlike AnimationLayser which is static, because I want to retain the evolution of the tips shown in the scene across screen chnges
+
+
 	var inside_domains: Map<String, openfl.geom.Rectangle>;
 
 	public var screen_script: screen_scripts.ScreenScriptBase;
@@ -143,9 +146,9 @@ class SceneProcessor {
 			physic_mask = filterColor(raw_bitmap.bitmapData, blackfilter);
 			physic_mask.blendIn(filterColor(raw_bitmap.bitmapData, gray1filter));
 			physic_mask.blendIn(filterColor(raw_bitmap.bitmapData, gray2filter));
-			physic_mask.blendIn(filterColor(raw_bitmap.bitmapData, gray3filter));
+			/*physic_mask.blendIn(filterColor(raw_bitmap.bitmapData, gray3filter));
 			physic_mask.blendIn(filterColor(raw_bitmap.bitmapData, gray4filter));
-			physic_mask.blendIn(filterColor(raw_bitmap.bitmapData, gray5filter));
+			physic_mask.blendIn(filterColor(raw_bitmap.bitmapData, gray5filter));*/
 			physic_mask.dilate(LogicMask.DISK_SE);
 			physic_mask.erode(LogicMask.DISK_SE);
 
@@ -186,6 +189,7 @@ class SceneProcessor {
 		deform_layer = new layers.DeformationLayer();
 		alive_layer = new layers.AliveLayer();
 		consume_layer = new layers.ConsumableLayer();
+		tips_layer = new layers.TipsLayer();
 	}
 
 	public function processAnimations(list: Array<WorldScenes.AnimInfo>) {
@@ -199,10 +203,45 @@ class SceneProcessor {
 				case "rotating-clock":
 				anims.push(new layers.RotatingClock(anim.domain, raw_bitmap));
 				case "cyclic-region":
-				var bmps: Array<BitmapData> = layers.AnimationLayer.extractAnimFromFile("assets/"+anim.source+".jpg", anim.domain, Math.round(anim.domain.width), Math.round(anim.domain.height), anim.nlines);
+				var bmps: Array<BitmapData> = layers.AnimationLayer.extractAnimFromFile("assets/"+anim.source+".jpg", anim.domain, Math.round(anim.domain.width), Math.round(anim.domain.height), anim.nlines, false);
 				Sys.println(anim.nlines+" "+bmps);
 				anims.push(new layers.CyclicDecorRegion(anim.domain, raw_bitmap, physic_mask, bmps, anim.period));
+				case "shaking-region":
+				var bmp: BitmapData = layers.AnimationLayer.extractAnimFromFile("assets/"+anim.source+".jpg", anim.domain, Math.round(anim.domain.width), Math.round(anim.domain.height), [1])[0];
+				anims.push(new layers.ShakingDecorRegion(anim.domain, raw_bitmap, physic_mask, bmp, anim.period, anim.delay));
+				case "insert-region":
+				var bmp: BitmapData = layers.AnimationLayer.extractAnimFromFile("assets/"+anim.source+".jpg", anim.domain, Math.round(anim.domain.width), Math.round(anim.domain.height), [1])[0];
+				anims.push(new layers.InsertDecorRegion(anim.domain, raw_bitmap, physic_mask, bmp, anim.delay));
+				
 			}
+		}
+	}
+
+	public function processTips(list: Array<WorldScenes.AnimInfo>) {
+		var bmps: Array<BitmapData>;
+		for(anim in list)
+		{
+			if(anim.nlines == null)
+				anim.nlines = [1];
+
+			if (anim.source != null)
+			{
+				bmps = layers.AnimationLayer.extractAnimFromFile("assets/"+anim.source+".jpg", anim.domain, Math.round(anim.domain.width), Math.round(anim.domain.height), anim.nlines);
+				
+				for(bmp in bmps)
+				{
+					var bitmap = new Bitmap(bmp);
+					bitmap.x = anim.domain.left;
+					bitmap.y = anim.domain.top;
+					bitmap.name = anim.script;
+					tips_layer.pushTip(bitmap);
+				}
+			}
+			else if (anim.script == "inplace")
+			{
+				tips_layer.pushInplace(anim.domain, anim.delay);
+			}
+
 		}
 	}
 
@@ -242,6 +281,8 @@ class SceneProcessor {
 			screen_script = new screen_scripts.DialogScreenScript(consume_layer, raw_bitmap);
 			case "racetrackinit":
 			screen_script = new screen_scripts.RaceTrackInit();
+			case "hospitalsick":
+			screen_script = new screen_scripts.HospitalReactToConsume(alive_layer);
 		} 
 	}
 
@@ -282,6 +323,7 @@ class SceneProcessor {
 
 		consume_layer.offsetUnits(dx,dy);
 		//alive_layer.offsetUnits(dx,dy);
+		tips_layer.offsetUnits(dx, dy);
 
 		offset_applied = true;
 	}
@@ -444,6 +486,10 @@ class SceneProcessor {
 		return script_mask;
 	}
 
+	public function getTipsLayer():layers.TipsLayer {
+		return tips_layer;
+	}
+
 	/***** color filter settings and function *****/
 
 	public static var blackfilter : ColorFilterSetting = {
@@ -531,6 +577,12 @@ class SceneProcessor {
 		tolr : Math.round(Math.pow(80,2)) //inclusion radius around the target color in the RGB sapce
 	};
 
+	public static var whitefilter : ColorFilterSetting = {
+		df : 1, //downsample factor of the source image
+		tgcol : ARGB.create(255,255,255,255), //target color to extract for the image
+		tolr : Math.round(Math.pow(50,2)) //inclusion radius around the target color in the RGB sapce
+	};
+
 	public static var max_closeness:Float = Math.pow(255,1);
 
 	public static function filterColor(bitmapData:BitmapData, fs: ColorFilterSetting):LogicMask
@@ -615,6 +667,23 @@ class SceneProcessor {
 		
 		//var bitmap2 = new Bitmap(bitmapData2);
 		return bmp2;
+	}
+
+	public static function removeColorBMP(bitmapData:BitmapData, fs: ColorFilterSetting) //:BitmapData
+	{
+		//var bmp2 = new BitmapData(bitmapData.width, bitmapData.height);
+		var color:ARGB;
+		for(x in 0...bitmapData.width) {
+			for(y in 0...bitmapData.height) {
+				color = new ARGB(bitmapData.getPixel32(x, y));
+				if (color.a > 0 && Math.pow(color.r-fs.tgcol.r,2)+Math.pow(color.g-fs.tgcol.g,2)+Math.pow(color.b-fs.tgcol.b,2) < fs.tolr)
+					bitmapData.setPixel32(x,y,0);
+				else
+					bitmapData.setPixel32(x,y,color);
+			}
+		}
+		
+		//return bmp2;
 	}
 
 	public static function MergeFilteredBMP(bitmapData1:BitmapData, bitmapData2:BitmapData):BitmapData

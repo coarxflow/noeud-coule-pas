@@ -49,7 +49,7 @@ class AnimationLayer {
 			main.addChild(idr.sprite);
 	}
 
-	public static function extractAnimFromFile(path: String, insert_region: Rectangle, reg_w: Int, reg_h: Int, nlines: Array<Int>) : Array<BitmapData>
+	public static function extractAnimFromFile(path: String, insert_region: Rectangle, reg_w: Int, reg_h: Int, nlines: Array<Int>, filter_out_white: Bool = true) : Array<BitmapData>
 	{
 		var raw_bitmap = Assets.getBitmapData(path);
 		var im_stack: Array<BitmapData> = new Array<BitmapData>();
@@ -62,6 +62,8 @@ class AnimationLayer {
 				{
 					bmp = new BitmapData(reg_w, reg_h);
 					bmp.copyPixels(raw_bitmap, new Rectangle(j*reg_w,i*reg_h,reg_w,reg_h), new Point(0,0));
+					if(filter_out_white)
+						SceneProcessor.removeColorBMP(bmp, SceneProcessor.whitefilter);
 					im_stack.push(bmp);
 				}
 			}
